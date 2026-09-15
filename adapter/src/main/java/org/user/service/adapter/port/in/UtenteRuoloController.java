@@ -56,6 +56,15 @@ public class UtenteRuoloController implements UtenteRuoliApi {
     }
 
     @Override
+    public ResponseEntity<List<Integer>> getRuoliByUtente(Integer idUtente) {
+        List<Integer> idRuoli = utenteRuoloUseCasePortIn.findIdRuoloByIdUtente(idUtente);
+        /*if (idRuoli == null || idRuoli.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }*/
+        return ResponseEntity.ok(idRuoli);
+    }
+
+    @Override
     public ResponseEntity<List<UtenteRuoloResponse>> listUtenteRuoli() {
         List<UtenteRuoloResponse> utenteRuoli = utenteRuoloUseCasePortIn.findAll().stream()
                 .map(utenteRuoloMapper::toUtenteRuoloResponse)

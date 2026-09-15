@@ -84,4 +84,12 @@ public class UtenteRuoloRepositoryPortOutImpl implements UtenteRuoloRepositoryPo
                         entity.getIdRuolo()
                 ));
     }
+
+    @Override
+    public List<Integer> findIdRuoloByIdUtente(Integer idUtente) {
+        return jpaUtenteRuoloRepository.findAllByIdUtente(idUtente.longValue()).stream()
+                .map(UtenteRuoloEntity::getIdRuolo)
+                .map(Long::intValue)
+                .toList();
+    }
 }
