@@ -74,6 +74,24 @@ public class UtenteRepositoryPortOutImpl implements UtenteRepositoryPortOut {
     }
 
     @Override
+    public List<UtenteRecord> findByNomeUtenteContainingIgnoreCase(String nomeUtente) {
+        try {
+            return jpaUtenteRepository.findByNomeUtenteContainingIgnoreCase(nomeUtente).stream()
+                    .map(entity -> new UtenteRecord(
+                            entity.getId(),
+                            entity.getNomeUtente(),
+                            entity.getNome(),
+                            entity.getCognome(),
+                            entity.getEmail(),
+                            entity.getPassword()
+                    ))
+                    .toList();
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    @Override
     public Boolean deleteById(Integer id) {
         try {
             if (!jpaUtenteRepository.existsById(id)) {

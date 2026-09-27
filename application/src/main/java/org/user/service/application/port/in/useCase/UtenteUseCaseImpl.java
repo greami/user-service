@@ -33,6 +33,11 @@ public class UtenteUseCaseImpl implements UtenteUseCasePortIn {
     }
 
     @Override
+    public List<UtenteRecord> findByNomeUtenteContainingIgnoreCase(String nomeUtente) {
+        return utenteRepository.findByNomeUtenteContainingIgnoreCase(nomeUtente);
+    }
+
+    @Override
     public Boolean deleteById(Integer id) {
         return utenteRepository.deleteById(id);
     }

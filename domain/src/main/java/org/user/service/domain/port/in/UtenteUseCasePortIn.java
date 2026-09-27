@@ -9,6 +9,7 @@ public interface UtenteUseCasePortIn {
     Optional<UtenteRecord> findById(Integer id);
     UtenteRecord save(UtenteRecord utente);
     List<UtenteRecord> findAll();
+    List<UtenteRecord> findByNomeUtenteContainingIgnoreCase(String nomeUtente);
     Boolean deleteById(Integer id);
     Boolean updateById(Integer id, String nomeUtente, String nome, String cognome, String email, String password);
     Optional<UtenteRecord> findByNomeUtente(String nomeUtente);

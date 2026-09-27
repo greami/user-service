@@ -115,6 +115,19 @@ public class UtenteController implements UtentiApi {
     }
 
     @Override
+    public ResponseEntity<List<UtenteResponse>> cercaUtentiLikeNome(String nomeUtente) {
+        List<UtenteRecord> utentiRecords =
+                utenteUseCasePortIn.findByNomeUtenteContainingIgnoreCase(nomeUtente);
+        if (utentiRecords == null) {
+            utentiRecords = List.of();
+        }
+        List<UtenteResponse> utenti = utentiRecords.stream()
+                .map(utenteMapper::toUtenteResponse)
+                .toList();
+        return ResponseEntity.ok(utenti);
+    }
+
+    @Override
     public ResponseEntity<UtenteResponse> updateUtente(Integer idUtente, UtenteUpdateRequest utenteUpdateRequest) {
         Boolean updated = utenteUseCasePortIn.updateById(
                 idUtente,
