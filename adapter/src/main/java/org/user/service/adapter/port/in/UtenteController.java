@@ -3,13 +3,16 @@ package org.user.service.adapter.port.in;
 import org.openapitools.api.UtentiApi;
 import org.openapitools.model.UtenteCreateRequest;
 import org.openapitools.model.UtenteResponse;
+import org.openapitools.model.UtenteConRuoliResponse;
 import org.openapitools.model.UtenteUpdateRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.user.service.adapter.mapper.UtenteMapper;
+import org.user.service.adapter.mapper.RuoloMapper;
 import org.user.service.domain.model.UtenteRecord;
+import org.user.service.domain.model.UtenteConRuoliRecord;
 import org.user.service.domain.port.in.UtenteUseCasePortIn;
 
 import java.util.List;
@@ -24,6 +27,9 @@ public class UtenteController implements UtentiApi {
 
     @Autowired
     private UtenteMapper utenteMapper;
+
+    @Autowired
+    private RuoloMapper ruoloMapper;
 
     @Override
     public ResponseEntity<UtenteResponse> createUtente(UtenteCreateRequest utenteCreateRequest) {
@@ -54,13 +60,13 @@ public class UtenteController implements UtentiApi {
     }
 
     @Override
-    public ResponseEntity<UtenteResponse> getUtenteByEmail(String email) {
-        Optional<UtenteRecord> utente = utenteUseCasePortIn.findByEmail(email);
+    public ResponseEntity<UtenteConRuoliResponse> getUtenteByEmail(String email) {
+        Optional<UtenteConRuoliRecord> utente = utenteUseCasePortIn.findByEmailWithRuoli(email);
         if (utente == null) {
             return ResponseEntity.notFound().build();
         }
         return utente
-                .map(record -> ResponseEntity.ok(utenteMapper.toUtenteResponse(record)))
+                .map(record -> ResponseEntity.ok(toUtenteConRuoliResponse(record)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -76,19 +82,35 @@ public class UtenteController implements UtentiApi {
     }
 
     @Override
-    public ResponseEntity<UtenteResponse> getUtenteByNomeUtente(String nomeUtente) {
-        Optional<UtenteRecord> utente = utenteUseCasePortIn.findByNomeUtente(nomeUtente);
+    public ResponseEntity<UtenteConRuoliResponse> getUtenteByNomeUtente(String nomeUtente) {
+        Optional<UtenteConRuoliRecord> utente = utenteUseCasePortIn.findByNomeUtenteWithRuoli(nomeUtente);
         if (utente == null) {
             return ResponseEntity.notFound().build();
         }
         return utente
                 .map(record -> {
-                    UtenteResponse baseResponse = utenteMapper.toUtenteResponse(record);
-                    UtenteByNomeUtenteResponse response = new UtenteByNomeUtenteResponse(baseResponse);
-                    response.setPassword(Objects.requireNonNullElse(record.password(), ""));
-                    return ResponseEntity.ok((UtenteResponse) response);
+                    UtenteConRuoliResponse response = toUtenteConRuoliResponse(record);
+                    UtenteByNomeUtenteResponse responseWithPassword =
+                            new UtenteByNomeUtenteResponse(response);
+                    responseWithPassword.setPassword(
+                            Objects.requireNonNullElse(record.utente().password(), ""));
+                    return ResponseEntity.ok(responseWithPassword);
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    private UtenteConRuoliResponse toUtenteConRuoliResponse(UtenteConRuoliRecord record) {
+        UtenteResponse baseResponse = utenteMapper.toUtenteResponse(record.utente());
+        UtenteConRuoliResponse response = new UtenteConRuoliResponse();
+        response.setIdUtente(baseResponse.getIdUtente());
+        response.setNomeUtente(baseResponse.getNomeUtente());
+        response.setNome(baseResponse.getNome());
+        response.setCognome(baseResponse.getCognome());
+        response.setEmail(baseResponse.getEmail());
+        response.setRuoli(record.ruoli().stream()
+                .map(ruoloMapper::toRuoloResponse)
+                .toList());
+        return response;
     }
 
     @Override
@@ -115,14 +137,26 @@ public class UtenteController implements UtentiApi {
     }
 
     @Override
-    public ResponseEntity<List<UtenteResponse>> cercaUtentiLikeNome(String nomeUtente) {
-        List<UtenteRecord> utentiRecords =
-                utenteUseCasePortIn.findByNomeUtenteContainingIgnoreCase(nomeUtente);
+    public ResponseEntity<List<UtenteConRuoliResponse>> cercaUtentiLikeNome(String nomeUtente) {
+        List<UtenteConRuoliRecord> utentiRecords =
+                utenteUseCasePortIn.findByNomeUtenteContainingIgnoreCaseWithRuoli(nomeUtente);
         if (utentiRecords == null) {
             utentiRecords = List.of();
         }
-        List<UtenteResponse> utenti = utentiRecords.stream()
-                .map(utenteMapper::toUtenteResponse)
+        List<UtenteConRuoliResponse> utenti = utentiRecords.stream()
+                .map(record -> {
+                    UtenteResponse response = utenteMapper.toUtenteResponse(record.utente());
+                    UtenteConRuoliResponse responseWithRoles = new UtenteConRuoliResponse();
+                    responseWithRoles.setIdUtente(response.getIdUtente());
+                    responseWithRoles.setNomeUtente(response.getNomeUtente());
+                    responseWithRoles.setNome(response.getNome());
+                    responseWithRoles.setCognome(response.getCognome());
+                    responseWithRoles.setEmail(response.getEmail());
+                    responseWithRoles.setRuoli(record.ruoli().stream()
+                            .map(ruoloMapper::toRuoloResponse)
+                            .toList());
+                    return responseWithRoles;
+                })
                 .toList();
         return ResponseEntity.ok(utenti);
     }
@@ -154,16 +188,17 @@ public class UtenteController implements UtentiApi {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    private static final class UtenteByNomeUtenteResponse extends UtenteResponse {
+    private static final class UtenteByNomeUtenteResponse extends UtenteConRuoliResponse {
         @JsonProperty("password")
         private String password;
 
-        private UtenteByNomeUtenteResponse(UtenteResponse source) {
+        private UtenteByNomeUtenteResponse(UtenteConRuoliResponse source) {
             this.setIdUtente(source.getIdUtente());
             this.setNomeUtente(source.getNomeUtente());
             this.setNome(source.getNome());
             this.setCognome(source.getCognome());
             this.setEmail(source.getEmail());
+            this.setRuoli(source.getRuoli());
         }
 
         public String getPassword() {
