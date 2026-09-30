@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface UtenteUseCasePortIn {
     Optional<UtenteRecord> findById(Integer id);
+    Optional<UtenteConRuoliRecord> findByIdWithRuoli(Integer id);
     UtenteRecord save(UtenteRecord utente);
     List<UtenteRecord> findAll();
     List<UtenteRecord> findByNomeUtenteContainingIgnoreCase(String nomeUtente);

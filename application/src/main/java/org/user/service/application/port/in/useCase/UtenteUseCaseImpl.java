@@ -28,6 +28,12 @@ public class UtenteUseCaseImpl implements UtenteUseCasePortIn {
     }
 
     @Override
+    public Optional<UtenteConRuoliRecord> findByIdWithRuoli(Integer id) {
+        return utenteRepository.findById(id)
+                .map(this::withRuoli);
+    }
+
+    @Override
     public UtenteRecord save(UtenteRecord utente) {
         return utenteRepository.save(utente);
     }

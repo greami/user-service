@@ -71,13 +71,13 @@ public class UtenteController implements UtentiApi {
     }
 
     @Override
-    public ResponseEntity<UtenteResponse> getUtenteById(Integer idUtente) {
-        Optional<UtenteRecord> utente = utenteUseCasePortIn.findById(idUtente);
+    public ResponseEntity<UtenteConRuoliResponse> getUtenteById(Integer idUtente) {
+        Optional<UtenteConRuoliRecord> utente = utenteUseCasePortIn.findByIdWithRuoli(idUtente);
         if (utente == null) {
             return ResponseEntity.notFound().build();
         }
         return utente
-                .map(record -> ResponseEntity.ok(utenteMapper.toUtenteResponse(record)))
+                .map(record -> ResponseEntity.ok(toUtenteConRuoliResponse(record)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
