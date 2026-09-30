@@ -94,7 +94,7 @@ public class UtenteController implements UtentiApi {
                             new UtenteByNomeUtenteResponse(response);
                     responseWithPassword.setPassword(
                             Objects.requireNonNullElse(record.utente().password(), ""));
-                    return ResponseEntity.ok(responseWithPassword);
+                    return ResponseEntity.<UtenteConRuoliResponse>ok(responseWithPassword);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
