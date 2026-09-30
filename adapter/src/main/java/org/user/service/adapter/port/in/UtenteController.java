@@ -5,7 +5,6 @@ import org.openapitools.model.UtenteCreateRequest;
 import org.openapitools.model.UtenteResponse;
 import org.openapitools.model.UtenteConRuoliResponse;
 import org.openapitools.model.UtenteUpdateRequest;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -88,14 +87,7 @@ public class UtenteController implements UtentiApi {
             return ResponseEntity.notFound().build();
         }
         return utente
-                .map(record -> {
-                    UtenteConRuoliResponse response = toUtenteConRuoliResponse(record);
-                    UtenteByNomeUtenteResponse responseWithPassword =
-                            new UtenteByNomeUtenteResponse(response);
-                    responseWithPassword.setPassword(
-                            Objects.requireNonNullElse(record.utente().password(), ""));
-                    return ResponseEntity.<UtenteConRuoliResponse>ok(responseWithPassword);
-                })
+                .map(record -> ResponseEntity.ok(toUtenteConRuoliResponse(record)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -110,6 +102,7 @@ public class UtenteController implements UtentiApi {
         response.setRuoli(record.ruoli().stream()
                 .map(ruoloMapper::toRuoloResponse)
                 .toList());
+        response.setPassword(Objects.requireNonNullElse(record.utente().password(), ""));
         return response;
     }
 
@@ -144,19 +137,7 @@ public class UtenteController implements UtentiApi {
             utentiRecords = List.of();
         }
         List<UtenteConRuoliResponse> utenti = utentiRecords.stream()
-                .map(record -> {
-                    UtenteResponse response = utenteMapper.toUtenteResponse(record.utente());
-                    UtenteConRuoliResponse responseWithRoles = new UtenteConRuoliResponse();
-                    responseWithRoles.setIdUtente(response.getIdUtente());
-                    responseWithRoles.setNomeUtente(response.getNomeUtente());
-                    responseWithRoles.setNome(response.getNome());
-                    responseWithRoles.setCognome(response.getCognome());
-                    responseWithRoles.setEmail(response.getEmail());
-                    responseWithRoles.setRuoli(record.ruoli().stream()
-                            .map(ruoloMapper::toRuoloResponse)
-                            .toList());
-                    return responseWithRoles;
-                })
+                .map(this::toUtenteConRuoliResponse)
                 .toList();
         return ResponseEntity.ok(utenti);
     }
@@ -188,25 +169,4 @@ public class UtenteController implements UtentiApi {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    private static final class UtenteByNomeUtenteResponse extends UtenteConRuoliResponse {
-        @JsonProperty("password")
-        private String password;
-
-        private UtenteByNomeUtenteResponse(UtenteConRuoliResponse source) {
-            this.setIdUtente(source.getIdUtente());
-            this.setNomeUtente(source.getNomeUtente());
-            this.setNome(source.getNome());
-            this.setCognome(source.getCognome());
-            this.setEmail(source.getEmail());
-            this.setRuoli(source.getRuoli());
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
-    }
 }
