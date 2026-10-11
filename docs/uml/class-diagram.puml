@@ -1,0 +1,158 @@
+@startuml
+title User Service - Class Diagram
+
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "Domain" {
+  package "Model" {
+    class UtenteRecord <<record>> {
+      id: Integer
+      nomeUtente: String
+      nome: String
+      cognome: String
+      email: String
+      password: String
+    }
+
+    class RuoloRecord <<record>> {
+      id: Long
+      nome: String
+      descrizione: String
+    }
+
+    class UtenteRuoloRecord <<record>> {
+      id: Long
+      idUtente: Long
+      idRuolo: Long
+    }
+
+    class UtenteConRuoliRecord <<record>>
+    UtenteConRuoliRecord *-- "1" UtenteRecord : utente
+    UtenteConRuoliRecord *-- "0..*" RuoloRecord : ruoli
+  }
+
+  package "Inbound ports" {
+    interface UtenteUseCasePortIn
+    interface RuoloUseCasePortIn
+    interface UtenteRuoloUseCasePortIn
+  }
+
+  package "Outbound ports" {
+    interface UtenteRepositoryPortOut
+    interface RuoloRepositoryPortOut
+    interface UtenteRuoloRepositoryPortOut
+  }
+}
+
+package "Application" {
+  class UtenteUseCaseImpl <<service>>
+  class RuoloUseCaseImpl <<service>>
+  class UtenteRuoloUseCaseImpl <<service>>
+
+  UtenteUseCaseImpl ..|> UtenteUseCasePortIn
+  RuoloUseCaseImpl ..|> RuoloUseCasePortIn
+  UtenteRuoloUseCaseImpl ..|> UtenteRuoloUseCasePortIn
+
+  UtenteUseCaseImpl ..> UtenteRepositoryPortOut
+  UtenteUseCaseImpl ..> RuoloRepositoryPortOut
+  UtenteUseCaseImpl ..> UtenteRuoloRepositoryPortOut
+  RuoloUseCaseImpl ..> RuoloRepositoryPortOut
+  UtenteRuoloUseCaseImpl ..> UtenteRuoloRepositoryPortOut
+}
+
+package "Adapter - inbound" {
+  interface UtentiApi <<generated OpenAPI>>
+  interface RuoliApi <<generated OpenAPI>>
+  interface UtenteRuoliApi <<generated OpenAPI>>
+
+  class UtenteController <<REST controller>>
+  class RuoloController <<REST controller>>
+  class UtenteRuoloController <<REST controller>>
+
+  UtenteController ..|> UtentiApi
+  RuoloController ..|> RuoliApi
+  UtenteRuoloController ..|> UtenteRuoliApi
+  UtenteController ..> UtenteUseCasePortIn
+  RuoloController ..> RuoloUseCasePortIn
+  UtenteRuoloController ..> UtenteRuoloUseCasePortIn
+}
+
+package "Adapter - outbound" {
+  class UtenteRepositoryPortOutImpl <<repository adapter>>
+  class RuoloRepositoryPortOutImpl <<repository adapter>>
+  class UtenteRuoloRepositoryPortOutImpl <<repository adapter>>
+
+  interface JpaUtenteRepository <<Spring Data>>
+  interface JpaRuoloRepository <<Spring Data>>
+  interface JpaUtenteRuoloRepository <<Spring Data>>
+
+  class UtenteEntity <<JPA entity>> {
+    id: Integer
+    nomeUtente: String
+    nome: String
+    cognome: String
+    email: String
+    password: String
+  }
+
+  class RuoloEntity <<JPA entity>> {
+    id: Integer
+    nome: String
+    descrizione: String
+  }
+
+  class UtenteRuoloEntity <<JPA entity>> {
+    id: Integer
+    idUtente: Long
+    idRuolo: Long
+  }
+
+  UtenteRepositoryPortOutImpl ..|> UtenteRepositoryPortOut
+  RuoloRepositoryPortOutImpl ..|> RuoloRepositoryPortOut
+  UtenteRuoloRepositoryPortOutImpl ..|> UtenteRuoloRepositoryPortOut
+
+  UtenteRepositoryPortOutImpl ..> JpaUtenteRepository
+  RuoloRepositoryPortOutImpl ..> JpaRuoloRepository
+  UtenteRuoloRepositoryPortOutImpl ..> JpaUtenteRuoloRepository
+  JpaUtenteRepository ..> UtenteEntity : persists
+  JpaRuoloRepository ..> RuoloEntity : persists
+  JpaUtenteRuoloRepository ..> UtenteRuoloEntity : persists
+
+  UtenteRuoloEntity ..> UtenteEntity : IDUTENTE (FK)
+  UtenteRuoloEntity ..> RuoloEntity : IDRUOLO (FK)
+}
+
+package "Mappers" {
+  interface UtenteMapper <<MapStruct>>
+  interface RuoloMapper <<MapStruct>>
+  interface UtenteRuoloMapper <<MapStruct>>
+
+  UtenteController ..> UtenteMapper
+  UtenteController ..> RuoloMapper
+  RuoloController ..> RuoloMapper
+  UtenteRuoloController ..> UtenteRuoloMapper
+  UtenteRepositoryPortOutImpl ..> UtenteMapper
+  RuoloRepositoryPortOutImpl ..> RuoloMapper
+  UtenteRuoloRepositoryPortOutImpl ..> UtenteRuoloMapper
+
+  UtenteMapper ..> UtenteRecord
+  UtenteMapper ..> UtenteEntity
+  RuoloMapper ..> RuoloRecord
+  RuoloMapper ..> RuoloEntity
+  UtenteRuoloMapper ..> UtenteRuoloRecord
+  UtenteRuoloMapper ..> UtenteRuoloEntity
+}
+
+note right of UtenteRuoloEntity
+  Le foreign key sono memorizzate come ID scalari,
+  non come associazioni JPA tra entity.
+end note
+
+note bottom of UtenteUseCaseImpl
+  Il vecchio ramo Credenziali non è incluso:
+  non fa parte del flusso REST esposto e contiene
+  implementazioni non operative.
+end note
+@enduml

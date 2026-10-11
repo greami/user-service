@@ -1,0 +1,69 @@
+@startuml
+title User Service - Use Case Diagram
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Client REST API" as Client
+
+rectangle "User Service" {
+  package "Gestione utenti" {
+    usecase "Elencare utenti" as UC_ListUsers
+    usecase "Creare utente" as UC_CreateUser
+    usecase "Cercare utenti per nome utente\n(case-insensitive, parziale)" as UC_SearchUsers
+    usecase "Recuperare utente per ID\n(con ruoli)" as UC_GetUserById
+    usecase "Aggiornare utente" as UC_UpdateUser
+    usecase "Eliminare utente" as UC_DeleteUser
+    usecase "Recuperare utente per email\n(con ruoli)" as UC_GetUserByEmail
+    usecase "Recuperare utente per nome utente\n(con ruoli)" as UC_GetUserByUsername
+    usecase "Cercare utente per nome utente\n e password" as UC_FindByCredentials
+  }
+
+  package "Gestione ruoli" {
+    usecase "Elencare ruoli" as UC_ListRoles
+    usecase "Creare ruolo" as UC_CreateRole
+    usecase "Recuperare ruolo per ID" as UC_GetRole
+    usecase "Aggiornare ruolo" as UC_UpdateRole
+    usecase "Eliminare ruolo" as UC_DeleteRole
+  }
+
+  package "Associazioni utente-ruolo" {
+    usecase "Elencare associazioni" as UC_ListAssignments
+    usecase "Creare associazione" as UC_CreateAssignment
+    usecase "Cercare associazione per utente e ruolo" as UC_FindAssignment
+    usecase "Elencare gli ID dei ruoli\nassociati a un utente" as UC_ListUserRoles
+    usecase "Recuperare associazione per ID" as UC_GetAssignment
+    usecase "Aggiornare associazione" as UC_UpdateAssignment
+    usecase "Eliminare associazione" as UC_DeleteAssignment
+  }
+}
+
+Client --> UC_ListUsers
+Client --> UC_CreateUser
+Client --> UC_SearchUsers
+Client --> UC_GetUserById
+Client --> UC_UpdateUser
+Client --> UC_DeleteUser
+Client --> UC_GetUserByEmail
+Client --> UC_GetUserByUsername
+Client --> UC_FindByCredentials
+
+Client --> UC_ListRoles
+Client --> UC_CreateRole
+Client --> UC_GetRole
+Client --> UC_UpdateRole
+Client --> UC_DeleteRole
+
+Client --> UC_ListAssignments
+Client --> UC_CreateAssignment
+Client --> UC_FindAssignment
+Client --> UC_ListUserRoles
+Client --> UC_GetAssignment
+Client --> UC_UpdateAssignment
+Client --> UC_DeleteAssignment
+
+note bottom of UC_FindByCredentials
+  Questa API effettua una ricerca con username e password;
+  non rappresenta un flusso di login/token.
+end note
+@enduml
