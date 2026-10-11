@@ -145,14 +145,4 @@ package "Mappers" {
   UtenteRuoloMapper ..> UtenteRuoloEntity
 }
 
-note right of UtenteRuoloEntity
-  Le foreign key sono memorizzate come ID scalari,
-  non come associazioni JPA tra entity.
-end note
-
-note bottom of UtenteUseCaseImpl
-  Il vecchio ramo Credenziali non è incluso:
-  non fa parte del flusso REST esposto e contiene
-  implementazioni non operative.
-end note
 @enduml
